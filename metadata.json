@@ -1,0 +1,6 @@
+{
+  "name": "Dino Jump Vision",
+  "description": "High-energy retro dinosaur runner powered by camera motion detection. Jump physically in front of your camera to leap over obstacles!",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
