@@ -1,13 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { DinoEngine } from './dinoEngine';
 import { GameRenderer } from './renderer';
-import { AccessoryType, DinoSkinConfig, GameMode, GameState, WorkoutReport } from './types';
+import { AccessoryType, DinoSkinConfig, GameMode, GameSpeed, GameState, WorkoutReport } from './types';
 
 interface GameCanvasProps {
   engineRef: React.MutableRefObject<DinoEngine | null>;
   skin: DinoSkinConfig;
   accessory: AccessoryType;
   mode: GameMode;
+  speedSetting: GameSpeed;
+  lockSpeed: boolean;
   gameState: GameState;
   onGameOver: (report: WorkoutReport) => void;
   onEggCollected?: () => void;
@@ -21,6 +23,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   skin,
   accessory,
   mode,
+  speedSetting,
+  lockSpeed,
   gameState,
   onGameOver,
   onEggCollected,
@@ -51,6 +55,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       skin,
       accessory,
       mode,
+      speedSetting,
+      lockSpeed,
       onGameOver,
       onEggCollected,
       onScoreMilestone,
@@ -166,6 +172,12 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       engineRef.current.setMode(mode);
     }
   }, [mode]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setSpeedSetting(speedSetting, lockSpeed);
+    }
+  }, [speedSetting, lockSpeed]);
 
   return (
     <div

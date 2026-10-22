@@ -6,6 +6,57 @@ export type GameState = 'title' | 'playing' | 'paused' | 'gameover' | 'warmup';
 
 export type GameMode = 'endless' | 'kid_adventure' | 'family_coop' | 'sprint50' | 'hiit3min';
 
+export type GameSpeed = 'gentle' | 'normal' | 'fast' | 'turbo';
+
+export interface SpeedConfig {
+  id: GameSpeed;
+  label: string;
+  icon: string;
+  baseSpeed: number;
+  maxSpeed: number;
+  minGap: number;
+  description: string;
+}
+
+export const SPEED_PRESETS: Record<GameSpeed, SpeedConfig> = {
+  gentle: {
+    id: 'gentle',
+    label: 'Gentle (Kids)',
+    icon: '🐢',
+    baseSpeed: 230,
+    maxSpeed: 270,
+    minGap: 560,
+    description: 'Slow, relaxed pace with big gaps between obstacles. Ideal for young kids!',
+  },
+  normal: {
+    id: 'normal',
+    label: 'Normal (Family)',
+    icon: '🚶',
+    baseSpeed: 310,
+    maxSpeed: 390,
+    minGap: 460,
+    description: 'Balanced pace for fun parent & kid active jumping.',
+  },
+  fast: {
+    id: 'fast',
+    label: 'Fast',
+    icon: '🏃',
+    baseSpeed: 380,
+    maxSpeed: 540,
+    minGap: 420,
+    description: 'High energy sprint for older kids & adults.',
+  },
+  turbo: {
+    id: 'turbo',
+    label: 'Turbo Arcade',
+    icon: '⚡',
+    baseSpeed: 460,
+    maxSpeed: 750,
+    minGap: 380,
+    description: 'Maximum speed challenge!',
+  },
+};
+
 export type DinoSkin = 'classic' | 'cyber' | 'volcano' | 'golden';
 
 export type AccessoryType = 

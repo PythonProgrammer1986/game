@@ -19,6 +19,8 @@ import {
   Star,
   WeatherParticle,
   WorkoutReport,
+  GameSpeed,
+  SPEED_PRESETS,
 } from './types';
 import { sound } from '../utils/audio';
 import { cheerVoice } from '../utils/speech';
@@ -29,6 +31,8 @@ export interface DinoEngineConfig {
   skin: DinoSkinConfig;
   accessory: AccessoryType;
   mode: GameMode;
+  speedSetting?: GameSpeed;
+  lockSpeed?: boolean;
   onGameOver: (report: WorkoutReport) => void;
   onScoreMilestone?: (milestone: number) => void;
   onEggCollected?: () => void;
@@ -77,12 +81,14 @@ export class DinoEngine {
     squashY: 1,
   };
 
-  // Simulation parameters
+  // Simulation parameters & Speed Controller
+  public speedSetting: GameSpeed = 'gentle';
+  public lockSpeed: boolean = true; // Constant steady pace, no sudden speed-up!
   private gravity: number = 2200;
   private baseJumpSpeed: number = -780;
-  private baseSpeed: number = 380;
-  public currentSpeed: number = 380;
-  private maxSpeed: number = 920;
+  private baseSpeed: number = 230;
+  public currentSpeed: number = 230;
+  private maxSpeed: number = 270;
 
   public mode: GameMode = 'kid_adventure';
   public state: GameState = 'title';
@@ -179,6 +185,17 @@ export class DinoEngine {
     this.dino.skin = config.skin;
     this.dino.accessory = config.accessory;
     this.mode = config.mode;
+    if (config.speedSetting) {
+      this.speedSetting = config.speedSetting;
+    }
+    if (config.lockSpeed !== undefined) {
+      this.lockSpeed = config.lockSpeed;
+    }
+    const preset = SPEED_PRESETS[this.speedSetting] || SPEED_PRESETS.gentle;
+    this.baseSpeed = preset.baseSpeed;
+    this.maxSpeed = preset.maxSpeed;
+    this.currentSpeed = preset.baseSpeed;
+
     this.onGameOverCb = config.onGameOver;
     this.onScoreMilestoneCb = config.onScoreMilestone;
     this.onEggCollectedCb = config.onEggCollected;
@@ -190,6 +207,17 @@ export class DinoEngine {
     this.littleDino.y = this.groundY - this.littleDino.height;
 
     this.initAtmosphere();
+  }
+
+  public setSpeedSetting(speed: GameSpeed, lockSpeed?: boolean) {
+    this.speedSetting = speed;
+    if (lockSpeed !== undefined) {
+      this.lockSpeed = lockSpeed;
+    }
+    const preset = SPEED_PRESETS[speed] || SPEED_PRESETS.gentle;
+    this.baseSpeed = preset.baseSpeed;
+    this.maxSpeed = preset.maxSpeed;
+    this.currentSpeed = preset.baseSpeed;
   }
 
   public setDimensions(w: number, h: number) {
@@ -264,9 +292,10 @@ export class DinoEngine {
 
     this.littleDino.y = this.groundY - this.littleDino.height;
     this.littleDino.vy = 0;
-    this.littleDino.isGrounded = true;
-
-    this.currentSpeed = this.baseSpeed;
+    const preset = SPEED_PRESETS[this.speedSetting] || SPEED_PRESETS.gentle;
+    this.baseSpeed = preset.baseSpeed;
+    this.maxSpeed = preset.maxSpeed;
+    this.currentSpeed = preset.baseSpeed;
     this.score = 0;
     this.distanceMeters = 0;
     this.gameTime = 0;
@@ -564,11 +593,17 @@ export class DinoEngine {
       }
     }
 
-    // Speed curve (tied gently to Dino Battery!)
-    const batteryBoost = 0.85 + (this.dinoBattery / 100) * 0.35;
-    const speedMultiplier = (1.0 + Math.sqrt(this.distanceMeters) * 0.02) * batteryBoost;
-    this.currentSpeed = Math.min(this.maxSpeed, this.baseSpeed * speedMultiplier);
-    sound.setSpeedTempo(this.currentSpeed / this.baseSpeed);
+    // Speed Controller: Lock speed or apply gentle acceleration
+    const preset = SPEED_PRESETS[this.speedSetting] || SPEED_PRESETS.gentle;
+    if (this.lockSpeed) {
+      // Constant steady speed throughout! No unexpected speed-up for kids
+      this.currentSpeed = preset.baseSpeed;
+    } else {
+      // Very smooth gentle speed progression capped at preset.maxSpeed
+      const ramp = Math.min(preset.maxSpeed - preset.baseSpeed, Math.sqrt(this.distanceMeters) * 0.7);
+      this.currentSpeed = preset.baseSpeed + ramp;
+    }
+    sound.setSpeedTempo(this.currentSpeed / preset.baseSpeed);
 
     // Distance & Score
     const deltaDist = this.currentSpeed * dt;
@@ -863,9 +898,9 @@ export class DinoEngine {
     this.nextObstacleDistance -= deltaDist;
     if (this.nextObstacleDistance <= 0) {
       this.spawnObstacle();
-      const minGap = 440 + Math.random() * 260;
-      const speedFactor = this.currentSpeed / 400;
-      this.nextObstacleDistance = minGap * (0.8 + speedFactor * 0.2);
+      const preset = SPEED_PRESETS[this.speedSetting] || SPEED_PRESETS.gentle;
+      const minGap = preset.minGap + Math.random() * 220;
+      this.nextObstacleDistance = minGap;
     }
 
     this.nextEggDistance -= deltaDist;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, DinoSkin, AccessoryType, GameMode, WorkoutReport, ActivePowerUp, PowerUpType, BiomeType, BabyDino } from './game/types';
+import { GameState, DinoSkin, AccessoryType, GameMode, GameSpeed, WorkoutReport, ActivePowerUp, PowerUpType, BiomeType, BabyDino } from './game/types';
 import { DINO_SKINS } from './game/skins';
 import { DinoEngine } from './game/dinoEngine';
 import { GameCanvas } from './game/GameCanvas';
@@ -25,6 +25,16 @@ export default function App() {
 
   const [selectedMode, setSelectedMode] = useState<GameMode>(() => {
     return (localStorage.getItem('dino_jump_mode') as GameMode) || 'kid_adventure';
+  });
+
+  // Speed Controller: Defaults to gentle with lockSpeed (constant pace) for kid physical jump cadence
+  const [speedSetting, setSpeedSetting] = useState<GameSpeed>(() => {
+    return (localStorage.getItem('dino_jump_speed') as GameSpeed) || 'gentle';
+  });
+
+  const [lockSpeed, setLockSpeed] = useState<boolean>(() => {
+    const saved = localStorage.getItem('dino_jump_lock_speed');
+    return saved !== null ? saved === 'true' : true;
   });
 
   const [totalEggs, setTotalEggs] = useState<number>(() => {
@@ -134,11 +144,13 @@ export default function App() {
     }
   }, [gameState]);
 
-  // Camera motion hook
+  // Camera motion hook with mobile front/back camera support
   const {
     cameraActive,
     hasPermission,
     cameraError,
+    facingMode,
+    toggleFacingMode,
     videoRef,
     hudCanvasRef,
     stats,
@@ -156,6 +168,7 @@ export default function App() {
     triggerManualStomp,
   } = useCameraMotion({
     sensitivity: (localStorage.getItem('dino_jump_sensitivity') as 'low' | 'normal' | 'high' | 'extreme') || 'normal',
+    facingMode: 'user',
     onJump: handleCameraJump,
     onDuckChange: handleCameraDuck,
     onRoarGesture: handleRoarGesture,
@@ -176,6 +189,30 @@ export default function App() {
     },
     [setSensitivity]
   );
+
+  const handleSetSpeed = useCallback(
+    (speed: GameSpeed) => {
+      sound.playClick();
+      setSpeedSetting(speed);
+      localStorage.setItem('dino_jump_speed', speed);
+      if (engineRef.current) {
+        engineRef.current.setSpeedSetting(speed, lockSpeed);
+      }
+    },
+    [lockSpeed]
+  );
+
+  const handleToggleLockSpeed = useCallback(() => {
+    sound.playClick();
+    setLockSpeed((prev) => {
+      const next = !prev;
+      localStorage.setItem('dino_jump_lock_speed', String(next));
+      if (engineRef.current) {
+        engineRef.current.setSpeedSetting(speedSetting, next);
+      }
+      return next;
+    });
+  }, [speedSetting]);
 
   const handleSelectSkin = useCallback((skin: DinoSkin) => {
     sound.playClick();
@@ -347,6 +384,8 @@ export default function App() {
         skin={DINO_SKINS[selectedSkin]}
         accessory={selectedAccessory}
         mode={selectedMode}
+        speedSetting={speedSetting}
+        lockSpeed={lockSpeed}
         gameState={gameState}
         onGameOver={handleGameOver}
       />
@@ -384,13 +423,15 @@ export default function App() {
         onTriggerStomp={() => engineRef.current?.triggerStomp()}
       />
 
-      {/* Camera HUD */}
+      {/* Camera HUD with Flip Front/Back Camera for Mobile */}
       <CameraHUD
         videoRef={videoRef}
         hudCanvasRef={hudCanvasRef}
         cameraActive={cameraActive}
         hasPermission={hasPermission}
         cameraError={cameraError}
+        facingMode={facingMode}
+        onToggleFacingMode={toggleFacingMode}
         jumpFlash={jumpFlash}
         roarFlash={roarFlash}
         physicalJumpCount={physicalJumpCount}
@@ -404,7 +445,7 @@ export default function App() {
         variant="floating"
       />
 
-      {/* Title Screen */}
+      {/* Title Screen with Speed Controller & Mobile Guides */}
       {gameState === 'title' && (
         <TitleScreen
           onStart={handleStartGame}
@@ -415,6 +456,10 @@ export default function App() {
           onSelectAccessory={handleSelectAccessory}
           selectedMode={selectedMode}
           onSelectMode={handleSelectMode}
+          speedSetting={speedSetting}
+          onSetSpeed={handleSetSpeed}
+          lockSpeed={lockSpeed}
+          onToggleLockSpeed={handleToggleLockSpeed}
           sensitivity={sensitivity}
           onSetSensitivity={handleSetSensitivity}
           cameraActive={cameraActive}
@@ -438,7 +483,7 @@ export default function App() {
         />
       )}
 
-      {/* Pause Modal */}
+      {/* Pause Modal with Live Speed Controller */}
       {gameState === 'paused' && (
         <PauseModal
           onResume={handleTogglePause}
@@ -447,6 +492,10 @@ export default function App() {
           onToggleMute={handleToggleMute}
           sensitivity={sensitivity}
           onSetSensitivity={handleSetSensitivity}
+          speedSetting={speedSetting}
+          onSetSpeed={handleSetSpeed}
+          lockSpeed={lockSpeed}
+          onToggleLockSpeed={handleToggleLockSpeed}
         />
       )}
 
