@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { RotateCcw, Flame, Footprints, Sparkles, Trophy, Award, Zap, HeartPulse } from 'lucide-react';
+import { RotateCcw, Flame, Footprints, Sparkles, Trophy, Award, Zap, HeartPulse, Home } from 'lucide-react';
 import { WorkoutReport } from '../game/types';
 
 interface GameOverModalProps {
@@ -8,6 +8,7 @@ interface GameOverModalProps {
   highScore: number;
   isNewHighScore: boolean;
   onRestart: () => void;
+  onHome?: () => void;
 }
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({
@@ -15,6 +16,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   highScore,
   isNewHighScore,
   onRestart,
+  onHome,
 }) => {
   useEffect(() => {
     try {
@@ -108,17 +110,29 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           </div>
         </div>
 
-        {/* Restart CTA */}
-        <button
-          onClick={onRestart}
-          className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-pixel text-xs sm:text-sm font-bold rounded-2xl shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 transition cursor-pointer"
-        >
-          <RotateCcw className="w-4 h-4" />
-          PLAY AGAIN TOGETHER (SPACE)
-        </button>
+        {/* Action CTAs */}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={onRestart}
+            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-pixel text-xs sm:text-sm font-bold rounded-2xl shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 transition cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4" />
+            PLAY AGAIN TOGETHER (SPACE)
+          </button>
+
+          {onHome && (
+            <button
+              onClick={onHome}
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-pixel text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <Home className="w-4 h-4 text-amber-400" />
+              MAIN MENU (HOME / H)
+            </button>
+          )}
+        </div>
 
         <p className="mt-2 text-[10px] font-mono-num text-slate-400">
-          Jump in front of the camera or press Space to start the next adventure!
+          Jump in front of camera, press Space to restart, or press H for Home!
         </p>
       </div>
     </div>

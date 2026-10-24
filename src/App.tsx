@@ -144,7 +144,7 @@ export default function App() {
     }
   }, [gameState]);
 
-  // Camera motion hook with mobile front/back camera support
+  // Camera motion hook with mobile front/back camera support & half skeleton tracking
   const {
     cameraActive,
     hasPermission,
@@ -156,12 +156,15 @@ export default function App() {
     stats,
     motionIntensity,
     isFrozenStill,
+    isCalibrated,
+    jumpProgress,
     jumpFlash,
     roarFlash,
     physicalJumpCount,
     sensitivity,
     setSensitivity,
     recalibrate,
+    calibrateCurrentPose,
     startCamera,
     triggerManualJump,
     triggerManualRoar,
@@ -174,6 +177,16 @@ export default function App() {
     onRoarGesture: handleRoarGesture,
     onStompGesture: handleStompGesture,
   });
+
+  // Return to Home / Title Screen
+  const handleGoHome = useCallback(() => {
+    sound.playClick();
+    if (engineRef.current) {
+      engineRef.current.reset();
+    }
+    setGameState('title');
+    setIsWarmUpOpen(false);
+  }, []);
 
   // Sync camera stillness to engine for Red Light / Green Light Dino Freeze
   useEffect(() => {
@@ -316,6 +329,9 @@ export default function App() {
         if (gameState === 'playing' && engineRef.current) {
           engineRef.current.triggerStomp();
         }
+      } else if (e.code === 'KeyH' || e.code === 'Home') {
+        e.preventDefault();
+        handleGoHome();
       } else if (e.code === 'Escape') {
         e.preventDefault();
         handleTogglePause();
@@ -346,7 +362,7 @@ export default function App() {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [gameState, isWarmUpOpen, handleStartGame, handleTogglePause]);
+  }, [gameState, isWarmUpOpen, handleStartGame, handleTogglePause, handleGoHome]);
 
   // Touch controls
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -419,33 +435,39 @@ export default function App() {
         onToggleMute={handleToggleMute}
         onToggleVoice={handleToggleVoice}
         onPause={handleTogglePause}
+        onHome={handleGoHome}
         onTriggerRoar={() => engineRef.current?.triggerRoar()}
         onTriggerStomp={() => engineRef.current?.triggerStomp()}
       />
 
-      {/* Camera HUD with Flip Front/Back Camera for Mobile */}
-      <CameraHUD
-        videoRef={videoRef}
-        hudCanvasRef={hudCanvasRef}
-        cameraActive={cameraActive}
-        hasPermission={hasPermission}
-        cameraError={cameraError}
-        facingMode={facingMode}
-        onToggleFacingMode={toggleFacingMode}
-        jumpFlash={jumpFlash}
-        roarFlash={roarFlash}
-        physicalJumpCount={physicalJumpCount}
-        sensitivity={sensitivity}
-        motionIntensity={motionIntensity}
-        onSetSensitivity={handleSetSensitivity}
-        onRecalibrate={recalibrate}
-        onStartCamera={startCamera}
-        onTriggerTestJump={triggerManualJump}
-        onTriggerTestRoar={triggerManualRoar}
-        variant="floating"
-      />
+      {/* In-Game Floating Camera HUD (Active during gameplay/paused/gameover) */}
+      {gameState !== 'title' && (
+        <CameraHUD
+          videoRef={videoRef}
+          hudCanvasRef={hudCanvasRef}
+          cameraActive={cameraActive}
+          hasPermission={hasPermission}
+          cameraError={cameraError}
+          facingMode={facingMode}
+          onToggleFacingMode={toggleFacingMode}
+          jumpFlash={jumpFlash}
+          roarFlash={roarFlash}
+          physicalJumpCount={physicalJumpCount}
+          sensitivity={sensitivity}
+          motionIntensity={motionIntensity}
+          onSetSensitivity={handleSetSensitivity}
+          onRecalibrate={recalibrate}
+          onCalibrateCurrentPose={calibrateCurrentPose}
+          isCalibrated={isCalibrated}
+          jumpProgress={jumpProgress}
+          onStartCamera={startCamera}
+          onTriggerTestJump={triggerManualJump}
+          onTriggerTestRoar={triggerManualRoar}
+          variant="floating"
+        />
+      )}
 
-      {/* Title Screen with Speed Controller & Mobile Guides */}
+      {/* Title Screen with Front Screen Camera Calibration & Radar */}
       {gameState === 'title' && (
         <TitleScreen
           onStart={handleStartGame}
@@ -470,6 +492,31 @@ export default function App() {
           onToggleVoice={handleToggleVoice}
           highScore={highScore}
           totalEggs={totalEggs}
+          cameraCalibrationSlot={
+            <CameraHUD
+              videoRef={videoRef}
+              hudCanvasRef={hudCanvasRef}
+              cameraActive={cameraActive}
+              hasPermission={hasPermission}
+              cameraError={cameraError}
+              facingMode={facingMode}
+              onToggleFacingMode={toggleFacingMode}
+              jumpFlash={jumpFlash}
+              roarFlash={roarFlash}
+              physicalJumpCount={physicalJumpCount}
+              sensitivity={sensitivity}
+              motionIntensity={motionIntensity}
+              onSetSensitivity={handleSetSensitivity}
+              onRecalibrate={recalibrate}
+              onCalibrateCurrentPose={calibrateCurrentPose}
+              isCalibrated={isCalibrated}
+              jumpProgress={jumpProgress}
+              onStartCamera={startCamera}
+              onTriggerTestJump={triggerManualJump}
+              onTriggerTestRoar={triggerManualRoar}
+              variant="front_screen"
+            />
+          }
         />
       )}
 
@@ -483,11 +530,12 @@ export default function App() {
         />
       )}
 
-      {/* Pause Modal with Live Speed Controller */}
+      {/* Pause Modal with Live Speed Controller & Home Button */}
       {gameState === 'paused' && (
         <PauseModal
           onResume={handleTogglePause}
           onRestart={handleStartGame}
+          onHome={handleGoHome}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
           sensitivity={sensitivity}
@@ -499,13 +547,14 @@ export default function App() {
         />
       )}
 
-      {/* Game Over / Award Certificate Modal */}
+      {/* Game Over / Award Certificate Modal with Home Button */}
       {gameState === 'gameover' && (
         <GameOverModal
           report={workoutReport}
           highScore={highScore}
           isNewHighScore={isNewHighScore}
           onRestart={handleStartGame}
+          onHome={handleGoHome}
         />
       )}
     </div>

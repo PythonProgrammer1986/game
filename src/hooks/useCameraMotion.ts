@@ -21,14 +21,18 @@ export function useCameraMotion(options: UseCameraMotionOptions = {}) {
   );
 
   const [stats, setStats] = useState({
-    baselineY: 0.45,
-    currentHeadY: 0.45,
+    baselineY: 0.38,
+    baselineTorsoY: 0.65,
+    currentHeadY: 0.38,
+    torsoY: 0.65,
     isJumping: false,
     isDucking: false,
     motionIntensity: 0,
     jumpVelocity: 0,
     jumpIntensity: 1.0,
     isFrozenStill: true,
+    isCalibrated: false,
+    jumpProgress: 0,
     landmarks: undefined as PoseLandmarks | undefined,
   });
 
@@ -111,6 +115,20 @@ export function useCameraMotion(options: UseCameraMotionOptions = {}) {
     if (detectorRef.current) {
       detectorRef.current.resetCalibration();
     }
+  }, []);
+
+  const calibrateCurrentPose = useCallback(() => {
+    if (detectorRef.current) {
+      const res = detectorRef.current.calibrateCurrentPose();
+      setStats((prev) => ({
+        ...prev,
+        baselineY: res.baselineHeadY,
+        baselineTorsoY: res.baselineTorsoY,
+        isCalibrated: true,
+      }));
+      return res;
+    }
+    return null;
   }, []);
 
   const stopCamera = useCallback(() => {
@@ -253,13 +271,17 @@ export function useCameraMotion(options: UseCameraMotionOptions = {}) {
 
         setStats({
           baselineY: frameResult.baselineY,
+          baselineTorsoY: frameResult.baselineTorsoY,
           currentHeadY: frameResult.headY,
+          torsoY: frameResult.torsoY,
           isJumping: frameResult.jumpDetected,
           isDucking: frameResult.isDucking,
           motionIntensity: frameResult.motionIntensity,
           jumpVelocity: frameResult.jumpVelocity,
           jumpIntensity: frameResult.jumpIntensity,
           isFrozenStill: frameResult.isFrozenStill,
+          isCalibrated: frameResult.isCalibrated,
+          jumpProgress: frameResult.jumpProgress,
           landmarks: frameResult.landmarks,
         });
 
@@ -267,10 +289,14 @@ export function useCameraMotion(options: UseCameraMotionOptions = {}) {
           detectorRef.current.renderOverlay(hudCanvasRef.current, {
             headY: frameResult.headY,
             baselineY: frameResult.baselineY,
+            torsoY: frameResult.torsoY,
+            baselineTorsoY: frameResult.baselineTorsoY,
             isJumping: frameResult.jumpDetected,
             isDucking: frameResult.isDucking,
             motionIntensity: frameResult.motionIntensity,
             isFrozenStill: frameResult.isFrozenStill,
+            isCalibrated: frameResult.isCalibrated,
+            jumpProgress: frameResult.jumpProgress,
             landmarks: frameResult.landmarks,
           });
         }
@@ -320,6 +346,8 @@ export function useCameraMotion(options: UseCameraMotionOptions = {}) {
     stats,
     motionIntensity: stats.motionIntensity,
     isFrozenStill: stats.isFrozenStill,
+    isCalibrated: stats.isCalibrated,
+    jumpProgress: stats.jumpProgress,
     jumpFlash,
     roarFlash,
     stompFlash,
@@ -327,6 +355,7 @@ export function useCameraMotion(options: UseCameraMotionOptions = {}) {
     sensitivity,
     setSensitivity,
     recalibrate,
+    calibrateCurrentPose,
     startCamera,
     stopCamera,
     triggerManualJump,

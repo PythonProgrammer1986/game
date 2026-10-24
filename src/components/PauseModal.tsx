@@ -1,10 +1,11 @@
 import React from 'react';
-import { Play, RotateCcw, Volume2, VolumeX, Gauge, Lock, Unlock } from 'lucide-react';
+import { Play, RotateCcw, Volume2, VolumeX, Gauge, Lock, Unlock, Home } from 'lucide-react';
 import { GameSpeed, SPEED_PRESETS } from '../game/types';
 
 interface PauseModalProps {
   onResume: () => void;
   onRestart: () => void;
+  onHome?: () => void;
   isMuted: boolean;
   onToggleMute: () => void;
   sensitivity: 'low' | 'normal' | 'high' | 'extreme';
@@ -18,6 +19,7 @@ interface PauseModalProps {
 export const PauseModal: React.FC<PauseModalProps> = ({
   onResume,
   onRestart,
+  onHome,
   isMuted,
   onToggleMute,
   sensitivity,
@@ -48,8 +50,18 @@ export const PauseModal: React.FC<PauseModalProps> = ({
             className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-pixel text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
-            RESTART
+            RESTART LEVEL
           </button>
+
+          {onHome && (
+            <button
+              onClick={onHome}
+              className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-pixel text-xs rounded-xl border border-amber-500/40 flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <Home className="w-4 h-4 text-amber-400" />
+              MAIN SCREEN (HOME)
+            </button>
+          )}
         </div>
 
         {/* Speed Controller for Parent / Kid */}

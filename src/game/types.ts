@@ -230,6 +230,12 @@ export interface PoseLandmarks {
   isRoarGesture: boolean;
   isStompGesture: boolean;
   isFrozenStill: boolean;
+  isCalibrated?: boolean;
+  jumpProgress?: number;
+  baselineHeadY?: number;
+  baselineTorsoY?: number;
+  torsoY?: number;
+  spineLength?: number;
 }
 
 export interface MotionDetectionStats {
@@ -238,6 +244,8 @@ export interface MotionDetectionStats {
   cameraError: string | null;
   baselineY: number;
   currentHeadY: number;
+  torsoY?: number;
+  baselineTorsoY?: number;
   jumpVelocity: number;
   jumpThreshold: number;
   duckThreshold: number;
@@ -249,6 +257,8 @@ export interface MotionDetectionStats {
   motionIntensity: number;
   jumpIntensity: number;
   isFrozenStill: boolean;
+  isCalibrated?: boolean;
+  jumpProgress?: number;
   landmarks?: PoseLandmarks;
 }
 

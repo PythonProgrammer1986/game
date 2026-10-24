@@ -27,6 +27,7 @@ interface TitleScreenProps {
   onToggleVoice: () => void;
   highScore: number;
   totalEggs: number;
+  cameraCalibrationSlot?: React.ReactNode;
 }
 
 export const TitleScreen: React.FC<TitleScreenProps> = ({
@@ -52,6 +53,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
   onToggleVoice,
   highScore,
   totalEggs,
+  cameraCalibrationSlot,
 }) => {
   return (
     <div className="absolute inset-0 z-30 flex flex-col justify-between p-3 sm:p-6 select-none overflow-y-auto bg-slate-950/85 backdrop-blur-sm">
@@ -158,6 +160,9 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
             );
           })}
         </div>
+
+        {/* FRONT SCREEN CAMERA CALIBRATION CENTER */}
+        {cameraCalibrationSlot}
 
         {/* SPEED CONTROLLER FOR PARENT & CHILD */}
         <div className="w-full max-w-lg mb-3 p-2.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 shadow-md">

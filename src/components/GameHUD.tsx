@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX, Pause, Flame, Sparkles, Footprints, ShieldAlert, Zap, Shield, Wind, Magnet, Heart, Mic, MicOff, BatteryCharging } from 'lucide-react';
+import { Volume2, VolumeX, Pause, Flame, Sparkles, Footprints, ShieldAlert, Zap, Shield, Wind, Magnet, Heart, Mic, MicOff, BatteryCharging, Home } from 'lucide-react';
 import { ActivePowerUp, BabyDino, BiomeType, GameMode, GameState, PowerUpType } from '../game/types';
 
 interface GameHUDProps {
@@ -27,6 +27,7 @@ interface GameHUDProps {
   onToggleMute: () => void;
   onToggleVoice: () => void;
   onPause: () => void;
+  onHome?: () => void;
   onTriggerRoar?: () => void;
   onTriggerStomp?: () => void;
 }
@@ -56,6 +57,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   onToggleMute,
   onToggleVoice,
   onPause,
+  onHome,
   onTriggerRoar,
   onTriggerStomp,
 }) => {
@@ -219,6 +221,18 @@ export const GameHUD: React.FC<GameHUDProps> = ({
           >
             <Pause className="w-4 h-4 text-cyan-400" />
           </button>
+
+          {/* Home Button */}
+          {onHome && (
+            <button
+              onClick={onHome}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-amber-500/40 shadow-lg transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              title="Return to Main Screen (Home / H key)"
+            >
+              <Home className="w-4 h-4 text-amber-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider hidden sm:inline">Home</span>
+            </button>
+          )}
         </div>
       </div>
 
